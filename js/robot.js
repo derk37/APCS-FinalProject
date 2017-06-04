@@ -111,18 +111,18 @@ function distance(circlea, circleb) {
   return Math.sqrt(Math.pow(circlea.x-circleb.x,2)+Math.pow(circlea.y-circleb.y,2));
 }
 
-function loadImage(name, x, y) {
+function loadImage(name, x, y, sizex, sizey) {
 
   images[name] = new Image();
   images[name].onload = function() { 
-      ctx.drawImage(images[name], x, y);
+      ctx.drawImage(images[name], x, y, sizex, sizey);
   };
   images[name].src = "images/" + name + ".png";
 }
 
 function animate()
 {
-  loadImage("center_vortex", CWIDTH/4, CHEIGHT/5);
+  loadImage("center_vortex", CWIDTH/2 - 250, CHEIGHT - 500, 500,500);
 
   ctx.fillStyle = "black";
   if(!lastCalledTime) {
