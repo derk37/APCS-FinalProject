@@ -8,7 +8,7 @@ var raf;
 var lastCalledTime;
 var fps;
 var delta;
-var GRAVITY = 0.5;
+var GRAVITY = .5;
 var FRICTION = 0.4;
 var AIRRESISTANCE = 0.1;
 var MOVESPEED = 3;
@@ -21,8 +21,9 @@ var left = false;
 var shoot = false;
 var SHOOTDELAY = 0.25;
 var shootDelta;
-var BOUNCE_CONSTANT = 0.8;
+var BOUNCE_CONSTANT = 0.5;
 var goal;
+var goal2;
 var score = 0;
 var COLLISION_CONSTANT = 0.8;
 var BALL_FRICTION = 0.01;
@@ -49,6 +50,15 @@ function rectangle(x,y,w,h,vx,vy,color) {
   this.draw = function() {
     ctx.fillStyle = this.color;
     ctx.fillRect(this.x,this.y,this.w,this.h);
+    // loadImage(this.color + "robot" + this.ball, this.x, this.y - 60, 100,100);
+  }
+}
+function robot(x,y,w,h,vx,vy,color) {
+  rectangle.apply(this, arguments);
+  this.draw = function() {
+    // ctx.fillStyle = this.color;
+    // ctx.fillRect(this.x,this.y,this.w,this.h);
+    loadImage(this.color + "robot" + this.ball, this.x, this.y - 110, 150, 150);
   }
 }
 
@@ -122,7 +132,7 @@ function loadImage(name, x, y, sizex, sizey) {
 
 function animate()
 {
-  loadImage("center_vortex", CWIDTH/2 - 250, CHEIGHT - 500, 500,500);
+  loadImage("centervortex", CWIDTH/2 - 250, CHEIGHT - 500, 500,500);
 
   ctx.fillStyle = "black";
   if(!lastCalledTime) {
@@ -386,10 +396,10 @@ $(function() {
   CHEIGHT = window.innerHeight - 20;
   canvas.width = CWIDTH;
   canvas.height = CHEIGHT;
-  goal = new rectangle(600,350,100,10,0,0,"red");
+  goal = new rectangle(CWIDTH/2 + 60,560,190,10,0,0,"red");
   goal.draw();
-  robo = new rectangle(60,60,40,40,0,0,"blue");
-  robo2 = new rectangle(CWIDTH-100,60,40,40,0,0,"red");
+  robo = new robot(60,60,40,40,0,0,"blue");
+  robo2 = new robot(CWIDTH-100,60,40,40,0,0,"red");
   robots.push(robo);
   robots.push(robo2);
   a = new circle(CWIDTH-60,60,0,0,0,GRAVITY,10,"blue");
