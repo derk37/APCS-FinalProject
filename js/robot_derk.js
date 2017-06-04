@@ -111,6 +111,8 @@ function distance(circlea, circleb) {
   return Math.sqrt(Math.pow(circlea.x-circleb.x,2)+Math.pow(circlea.y-circleb.y,2));
 }
 
+loadImage("center_vortex");
+
 function loadImage(name) {
 
   images[name] = new Image();
@@ -398,5 +400,6 @@ $(function() {
   balls.push(b);
   balls.push(c);
   balls.push(d);
+  context.drawImage(images[center_vortex], CWIDTH/2, CHEIGHT);
   raf = window.requestAnimationFrame(animate);
 });
