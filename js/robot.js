@@ -50,15 +50,13 @@ function rectangle(x,y,w,h,vx,vy,color) {
   this.draw = function() {
     ctx.fillStyle = this.color;
     ctx.fillRect(this.x,this.y,this.w,this.h);
-    // loadImage(this.color + "robot" + this.ball, this.x, this.y - 60, 100,100);
   }
 }
+
 function robot(x,y,w,h,vx,vy,color) {
   rectangle.apply(this, arguments);
   this.draw = function() {
-    // ctx.fillStyle = this.color;
-    // ctx.fillRect(this.x,this.y,this.w,this.h);
-    loadImage(this.color + "robot" + this.ball, this.x, this.y - 110, 150, 150);
+    loadImage(this.color + "robot" + this.ball, this.x - 50, this.y - 110, 150, 150);
   }
 }
 
