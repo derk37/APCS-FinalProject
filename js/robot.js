@@ -9,26 +9,24 @@ var lastCalledTime;
 var fps;
 var delta;
 var GRAVITY = .5;
-var FRICTION = 0.4;
+var RGRAVITY = 0.8;
+var FRICTION = 0.7;
 var AIRRESISTANCE = 0.1;
 var MOVESPEED = 3;
-var JUMPSPEED = 17;
-var MAXSPEED = 10;
-var up = false;
-var down = false;
-var right = false;
-var left = false;
-var shoot = false;
+var JUMPSPEED = 20;
+var MAXSPEED = 15;
 var SHOOTDELAY = 0.25;
 var shootDelta;
 var BOUNCE_CONSTANT = 0.5;
-var goal;
+var goal1;
 var goal2;
-var score = 0;
+var bluescore = 0;
+var redscore = 0;
 var COLLISION_CONSTANT = 0.8;
 var BALL_FRICTION = 0.01;
 var RADIUS = 10;
 var images = {};
+var scoreDelta;
 
 function rectangle(x,y,w,h,vx,vy,color) {
   this.x = x;
@@ -47,6 +45,7 @@ function rectangle(x,y,w,h,vx,vy,color) {
   this.right = false;
   this.shoot = false;
   this.shootTimer = Date.now();
+  this.previousr = false;
   this.draw = function() {
     ctx.fillStyle = this.color;
     ctx.fillRect(this.x,this.y,this.w,this.h);
@@ -56,7 +55,13 @@ function rectangle(x,y,w,h,vx,vy,color) {
 function robot(x,y,w,h,vx,vy,color) {
   rectangle.apply(this, arguments);
   this.draw = function() {
-    loadImage(this.color + "robot" + this.ball, this.x - 50, this.y - 110, 150, 150);
+    if(this.heading == 1){
+      loadImage(this.color + "robot" + this.ball + "right", this.x - 50, this.y - 110, 150, 150);
+      previousr = true;
+    }
+    else  {
+      loadImage(this.color + "robot" + this.ball + "left", this.x - 50, this.y - 110, 150, 150);
+    }
   }
 }
 
@@ -69,6 +74,7 @@ function circle(x, y, vx, vy, ax, ay, radius, color) {
   this.ay = ay;
   this.radius = radius;
   this.color = color;
+  this.scoreTimer = Date.now();
   this.draw = function() {
     ctx.beginPath();
     ctx.arc(this.x, this.y, this.radius, 0, Math.PI*2, true);
@@ -86,21 +92,21 @@ function collisionr(circlea, rectb) {
   return circlea.x-circlea.radius<=rectb.x+rectb.w&&circlea.x+circlea.radius>=rectb.x && circlea.y-circlea.radius<=rectb.y+rectb.h&&circlea.y+circlea.radius>=rectb.y;
 }
 
-function collisionl(circlea) {
-  if(circlea.x+circlea.radius>=goal.x&&circlea.x-circlea.radius<=goal.x+goal.w&&circlea.y+circlea.radius>=goal.y&&circlea.y-circlea.radius<=goal.y+goal.w/2) {
-    for(i = 0;i<goal.w/2;i++) {
-      if(circlea.y+circlea.radius>=goal.y+i && circlea.y-circlea.radius<=goal.y+i) {
-        if(circlea.x+circlea.radius>=goal.x+goal.w/2-i && circlea.x-circlea.radius<=goal.x +goal.w/2-i) {
-          return true;
-        }
-        else if(circlea.x+circlea.radius>=goal.x+goal.w/2+i && circlea.x-circlea.radius<=goal.x+goal.w/2+i) {
-          return true;
-        }
-      }
-    }
-  }
-  return false;
-}
+// function collisionl(circlea) {
+//   if(circlea.x+circlea.radius>=goal.x&&circlea.x-circlea.radius<=goal.x+goal.w&&circlea.y+circlea.radius>=goal.y&&circlea.y-circlea.radius<=goal.y+goal.w/2) {
+//     for(i = 0;i<goal.w/2;i++) {
+//       if(circlea.y+circlea.radius>=goal.y+i && circlea.y-circlea.radius<=goal.y+i) {
+//         if(circlea.x+circlea.radius>=goal.x+goal.w/2-i && circlea.x-circlea.radius<=goal.x +goal.w/2-i) {
+//           return true;
+//         }
+//         else if(circlea.x+circlea.radius>=goal.x+goal.w/2+i && circlea.x-circlea.radius<=goal.x+goal.w/2+i) {
+//           return true;
+//         }
+//       }
+//     }
+//   }
+//   return false;
+// }
 
 function collisionrr(recta, rectb) {
   return (recta.x>=rectb.x&&recta.x<=rectb.x+rectb.w||recta.x+recta.w>=rectb.x&&recta.x+recta.w<=rectb.x+rectb.w) && (recta.y>=rectb.y&&recta.y<=rectb.y+rectb.h||recta.y+recta.h>=rectb.y&&recta.y+recta.h<=rectb.y+rectb.h);
@@ -122,7 +128,7 @@ function distance(circlea, circleb) {
 function loadImage(name, x, y, sizex, sizey) {
 
   images[name] = new Image();
-  images[name].onload = function() { 
+  images[name].onload = function() {
       ctx.drawImage(images[name], x, y, sizex, sizey);
   };
   images[name].src = "images/" + name + ".png";
@@ -145,19 +151,21 @@ function animate()
   ctx.clearRect(0,0, CWIDTH, CHEIGHT);
   ctx.fillText("FPS: " + Math.round(fps), CWIDTH - 60, 10);
   ctx.font = "20px Arial";
-  ctx.fillText("Score: " + score,CWIDTH/2,30);
+  ctx.fillText("Blue: " + bluescore,CWIDTH/3,30);
+  ctx.fillText("Red: " + redscore,CWIDTH - CWIDTH/3,30);
 
-  ctx.fillStyle = "gray";
-  ctx.beginPath();
-  ctx.moveTo(goal.x+goal.w/2,goal.y+1);
-  ctx.lineTo(goal.x,goal.y+goal.w/2);
-  ctx.stroke();
-  ctx.beginPath();
-  ctx.moveTo(goal.x+goal.w/2,goal.y+1);
-  ctx.lineTo(goal.x+goal.w,goal.y+goal.w/2);
-  ctx.stroke();
+  // ctx.fillStyle = "gray";
+  // ctx.beginPath();
+  // ctx.moveTo(goal.x+goal.w/2,goal.y+1);
+  // ctx.lineTo(goal.x,goal.y+goal.w/2);
+  // ctx.stroke();
+  // ctx.beginPath();
+  // ctx.moveTo(goal.x+goal.w/2,goal.y+1);
+  // ctx.lineTo(goal.x+goal.w,goal.y+goal.w/2);
+  // ctx.stroke();
 
-  goal.draw();
+  goal1.draw();
+  goal2.draw();
 
   for (var i = 0; i < robots.length; i++)
   {
@@ -168,7 +176,7 @@ function animate()
     }
     else {
       robots[i].airborne = true;
-      robots[i].vy += GRAVITY;
+      robots[i].vy += RGRAVITY;
     }
 
     if(robots[i].x < 0) {
@@ -231,10 +239,10 @@ function animate()
     if(robots[i].shoot && robots[i].ball > 0) {
       if(shootDelta > SHOOTDELAY) {
         if(robots[i].heading == 1) {
-          c = new circle(robots[i].x+robots[i].w+10.1,robots[i].y-10.1,getRandom(6,8),-getRandom(18,22),0,GRAVITY,10,robots[i].color);
+          c = new circle(robots[i].x+robots[i].w+10.1,robots[i].y-10.1,getRandom(4,6),-getRandom(20,26),0,GRAVITY,10,robots[i].color);
         }
         else {
-          c = new circle(robots[i].x-10.1,robots[i].y-10.1,-getRandom(6,8),-getRandom(18,22),0,GRAVITY,10,robots[i].color);
+          c = new circle(robots[i].x-10.1,robots[i].y-10.1,-getRandom(4,6),-getRandom(20,26),0,GRAVITY,10,robots[i].color);
         }
         balls.push(c);
         robots[i].ball--;
@@ -243,6 +251,7 @@ function animate()
     }
   }
   for (var i = 0; i < balls.length; i++) {
+
     if(collisionr(balls[i],robots[0]) && balls[i].color===robots[0].color) {
       robots[0].ball++;
       balls.splice(i,1);
@@ -254,17 +263,23 @@ function animate()
       i--;
     }
     else {
-      if(collisionr(balls[i],goal)) {
-        score += 5;
+      scoreDelta = (new Date().getTime() - balls[i].scoreTimer)/1000;
+      if(collisionr(balls[i],goal1) && scoreDelta > 1) {
+        redscore += 5;
+        balls[i].scoreTimer = Date.now();
       }
-      if(balls[i].x<goal.x+goal.w/2&&collisionl(balls[i])) {
-        balls[i].vx = -balls[i].vy*BOUNCE_CONSTANT;
-        balls[i].vy = balls[i].vx*BOUNCE_CONSTANT*0.8;
+      else if(collisionr(balls[i],goal2) && scoreDelta > 1) {
+        bluescore += 5;
+        balls[i].scoreTimer = Date.now();
       }
-      else if(collisionl(balls[i])){
-        balls[i].vx = balls[i].vy*BOUNCE_CONSTANT;
-        balls[i].vy = -balls[i].vx*BOUNCE_CONSTANT*0.8;
-      }
+      // if(balls[i].x<goal.x+goal.w/2&&collisionl(balls[i])) {
+      //   balls[i].vx = -balls[i].vy*BOUNCE_CONSTANT;
+      //   balls[i].vy = balls[i].vx*BOUNCE_CONSTANT*0.8;
+      // }
+      // else if(collisionl(balls[i])){
+      //   balls[i].vx = balls[i].vy*BOUNCE_CONSTANT;
+      //   balls[i].vy = -balls[i].vx*BOUNCEeada_CONSTANT*0.8;
+      // }
 
       if(balls[i].vx > 0) {
         balls[i].vx -= BALL_FRICTION;
@@ -394,8 +409,10 @@ $(function() {
   CHEIGHT = window.innerHeight - 20;
   canvas.width = CWIDTH;
   canvas.height = CHEIGHT;
-  goal = new rectangle(CWIDTH/2 + 60,560,190,10,0,0,"red");
-  goal.draw();
+  goal1 = new rectangle(CWIDTH/2 + 60,CHEIGHT - 375,190,10,0,0,"red");
+  goal2 = new rectangle(CWIDTH/2 - 250 ,CHEIGHT - 375,190,10,0,0, "blue");
+  goal1.draw();
+  goal2.draw();
   robo = new robot(60,60,40,40,0,0,"blue");
   robo2 = new robot(CWIDTH-100,60,40,40,0,0,"red");
   robots.push(robo);
